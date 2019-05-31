@@ -1,14 +1,14 @@
 # 产生公钥和私钥
-// GenerateSm2Key used to product publicKey and privateKey.   
+// GenerateKeyX used to product publicKey and privateKey.   
 // The publicKey is ponit compressed    
-func GenerateSm2Key() (pubKey string, priKey string, err error) 
+func GenerateKeyX() (pubKey string, priKey string, err error) 
 
 # sm2签名
-// SignWithSm2 used to sign src,priKey is hex string.   
+// SignX used to sign src,priKey is hex string.   
 // If userID be assigned nil,which  will be assigned default value    
-func SignWithSm2(priKey string, userID []byte, src []byte) ([]byte, error) 
+func SignX(priKey string, userID []byte, src []byte) ([]byte, error) 
 
 # sm2验签
-// VerifyWithSm2 used to verify src and sign.   
+// VerifyX used to verify src and sign.   
 // If userID be assigned nil,which  will be assigned default value    
-func VerifyWithSm2(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error)
+func VerifyX(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error)

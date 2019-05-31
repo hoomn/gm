@@ -509,9 +509,9 @@ func Verify(pub *PublicKey, userId []byte, src []byte, sign []byte) bool {
 	return VerifyByRS(pub, userId, src, r, s)
 }
 
-// SignWithSm2 used to sign src,priKey is hex string.
+// SignX used to sign src,priKey is hex string.
 // If userID be assigned nil,which  default value is 1234567812345678
-func SignWithSm2(priKey string, userID []byte, src []byte) ([]byte, error) {
+func SignX(priKey string, userID []byte, src []byte) ([]byte, error) {
 	priKeyBytes, err := hex.DecodeString(priKey)
 	if err != nil {
 		return nil, errors.New("decode privateStr fail")
@@ -528,9 +528,9 @@ func SignWithSm2(priKey string, userID []byte, src []byte) ([]byte, error) {
 	return result, nil
 }
 
-// VerifyWithSm2 used to verify src and sign
+// VerifyX used to verify src and sign
 // If userID be assigned nil,which  default value is 1234567812345678
-func VerifyWithSm2(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
+func VerifyX(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
 	pubKeyBytes, err := hex.DecodeString(pubKey)
 	if err != nil {
 		return false, err
@@ -540,9 +540,9 @@ func VerifyWithSm2(pubKey string, userID []byte, src []byte, sign []byte) (pass 
 	return Verify(publicKey, userID, src, sign), nil
 }
 
-// GenerateSm2Key used to product publicKey and privateKey.
+// GenerateKeyX used to product publicKey and privateKey.
 // The publicKey is ponit compressed
-func GenerateSm2Key() (pubKey string, priKey string, err error) {
+func GenerateKeyX() (pubKey string, priKey string, err error) {
 	priv, pub, err := GenerateKey(rand.Reader)
 	if err != nil {
 		return "", "", err
