@@ -1,15 +1,16 @@
 package sm2
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"math/big"
 )
 
-// GeneratePointCompressKeyX used to product publicKey and privateKey.
+// BHGeneratePointCompressKey used to product publicKey and privateKey.
 // The publicKey is ponit compressed
-func GeneratePointCompressKeyX() (pubKey string, priKey string, err error) {
+func BHGeneratePointCompressKey() (pubKey string, priKey string, err error) {
 	priv, pub, err := GenerateKey(rand.Reader)
 	if err != nil {
 		return "", "", err
@@ -20,8 +21,8 @@ func GeneratePointCompressKeyX() (pubKey string, priKey string, err error) {
 	return pubKeyHex, priKeyHex, nil
 }
 
-// GenerateKeyX used to product publicKey and privateKey
-func GenerateKeyX() (pubKey string, priKey string, err error) {
+// BHGenerateKey used to product publicKey and privateKey
+func BHGenerateKey() (pubKey string, priKey string, err error) {
 	priv, pub, err := GenerateKey(rand.Reader)
 	if err != nil {
 		return "", "", err
@@ -31,9 +32,39 @@ func GenerateKeyX() (pubKey string, priKey string, err error) {
 	return pubKeyHex, priKeyHex, nil
 }
 
-// SignX used to sign src,priKey is hex string.
+// BHSign used to sign src,priKey is hex string.return r/s bytes
 // If userID be assigned nil,which  default value is 1234567812345678
-func SignX(priKey string, userID []byte, src []byte) ([]byte, error) {
+func BHSign(priKey string, userID []byte, src []byte) ([]byte, error) {
+	priKeyBytes, err := hex.DecodeString(priKey)
+	if err != nil {
+		return nil, errors.New("decode privateStr fail")
+	}
+
+	privateKey, err := RawBytesToPrivateKey(priKeyBytes)
+	if err != nil {
+		return nil, errors.New("convert privKey bytes to PrivateKey fail")
+	}
+	r, s, err := SignToRS(privateKey, userID, src)
+	if err != nil {
+		return nil, errors.New("SignToRS fail")
+	}
+	result := bytesCombine(r.Bytes(), s.Bytes())
+	return result, nil
+}
+
+func bytesCombine(pBytes ...[]byte) []byte {
+	len := len(pBytes)
+	s := make([][]byte, len)
+	for index := 0; index < len; index++ {
+		s[index] = pBytes[index]
+	}
+	sep := []byte("")
+	return bytes.Join(s, sep)
+}
+
+// BHSignX used to sign src,priKey is hex string.return asn.1 format bytes
+// If userID be assigned nil,which  default value is 1234567812345678
+func BHSignX(priKey string, userID []byte, src []byte) ([]byte, error) {
 	priKeyBytes, err := hex.DecodeString(priKey)
 	if err != nil {
 		return nil, errors.New("decode privateStr fail")
@@ -50,9 +81,23 @@ func SignX(priKey string, userID []byte, src []byte) ([]byte, error) {
 	return result, nil
 }
 
-// VerifyWithPointCompress used to verify src and sign,the pubKey is point compress
+// BHVerifyWithPointCompress used to verify src and sign,the pubKey is point compress,the sign is r/s bytes
 // If userID be assigned nil,which  default value is 1234567812345678
-func VerifyWithPointCompress(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
+func BHVerifyWithPointCompress(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
+	pubKeyBytes, err := hex.DecodeString(pubKey)
+	if err != nil {
+		return false, err
+	}
+
+	publicKey := decompress(pubKeyBytes)
+	r := new(big.Int).SetBytes(sign[:KeyBytes])
+	s := new(big.Int).SetBytes(sign[KeyBytes:])
+	return VerifyByRS(publicKey, userID, src, r, s), nil
+}
+
+// BHVerifyWithPointCompressX used to verify src and sign,the pubKey is point compress,the sign is asn.1 format bytes
+// If userID be assigned nil,which  default value is 1234567812345678
+func BHVerifyWithPointCompressX(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
 	pubKeyBytes, err := hex.DecodeString(pubKey)
 	if err != nil {
 		return false, err
@@ -62,8 +107,23 @@ func VerifyWithPointCompress(pubKey string, userID []byte, src []byte, sign []by
 	return Verify(publicKey, userID, src, sign), nil
 }
 
-// VerifyX function is similar with VerifyWithPointCompress,the pubKey is unCompress
-func VerifyX(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
+// BHVerify function is similar with VerifyWithPointCompress,the pubKey is unCompress,the sign is r/s bytes
+func BHVerify(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
+	pubKeyBytes, err := hex.DecodeString(pubKey)
+	if err != nil {
+		return false, err
+	}
+	publicKey, err := RawBytesToPublicKey(pubKeyBytes)
+	if err != nil {
+		return false, err
+	}
+	r := new(big.Int).SetBytes(sign[:KeyBytes])
+	s := new(big.Int).SetBytes(sign[KeyBytes:])
+	return VerifyByRS(publicKey, userID, src, r, s), nil
+}
+
+// BHVerifyX function is similar with VerifyWithPointCompress,the pubKey is unCompress,the sign is asn.1 format bytes
+func BHVerifyX(pubKey string, userID []byte, src []byte, sign []byte) (pass bool, err error) {
 	pubKeyBytes, err := hex.DecodeString(pubKey)
 	if err != nil {
 		return false, err
